@@ -1,0 +1,47 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go build command
+*.out
+
+# Dependency directories (gomodules)
+vendor/
+
+# Environment variables
+.env
+.env.*
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.bak
+*.swo
+
+# Mac specific files
+.DS_Store
+
+# Log files
+*.log
+
+# Gin specific files (if any temporary or build files are generated)
+# Typically, Gin itself doesn't generate files that need to be ignored,
+# but if you have specific temporary directories for uploads, sessions, etc.,
+# you would add them here.
+# Example:
+# /tmp_uploads/
+# /sessions/
+
+# Go module cache
+# This is usually located outside the project directory, but if you have
+# a custom setup, you might need to ignore it.
+# go.mod.bak
+# go.sum.bak
+
+# Any other project-specific temporary files

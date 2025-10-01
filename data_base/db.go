@@ -2,6 +2,7 @@ package data_base
 
 import (
 	"fmt"
+	"go-user-service/config"
 	"log"
 	"time"
 
@@ -17,8 +18,10 @@ type User struct {
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }
 
-func db() {
-	dsn := "user:password@tcp(localhost:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+func ConnectDb() {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
+	// dsn := "user:password@tcp(localhost:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)

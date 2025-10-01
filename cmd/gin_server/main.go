@@ -1,6 +1,8 @@
 package main
 
 import (
+	"go-user-service/data_base"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,7 +11,7 @@ import (
 // }
 func main() {
 	router := gin.Default()
-	db()
+	data_base.ConnectDb()
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
