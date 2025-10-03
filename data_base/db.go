@@ -3,7 +3,8 @@ package data_base
 import (
 	"fmt"
 	"go-user-service/config"
-	"log"
+	"go-user-service/utils/logger"
+
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -18,38 +19,29 @@ type User struct {
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }
 
-func ConnectDb() {
+type Database struct {
+	DB *gorm.DB
+}
+
+func ConnectDb(cfg *config.Config) *Database {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
-	// dsn := "user:password@tcp(localhost:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		logger.Error.Printf("🔴 Failed to connect to database:%v", err)
 	}
+	err2 := db.Exec("SELECT 1").Error
+	if err2 != nil {
+		logger.Error.Printf("🔴 database connection verification failed: %v", err2)
 
-	// Auto migrate
-	err = db.AutoMigrate(&User{})
-	if err != nil {
-		log.Fatal(err)
 	}
+	logger.Info.Println("🟢 Database connected successfully")
+	return &Database{DB: db}
+}
 
-	// CRUD operations with GORM
-	user := User{Name: "John Doe", Email: "john@example.com"}
-
-	// Create
-	result := db.Create(&user)
-	if result.Error != nil {
-		log.Fatal(result.Error)
+func (d *Database) Close() {
+	if sqlDB, err := d.DB.DB(); err == nil {
+		sqlDB.Close()
 	}
-
-	// Read
-	var fetchedUser User
-	db.First(&fetchedUser, user.ID)
-	fmt.Printf("User: %+v\n", fetchedUser)
-
-	// Update
-	db.Model(&fetchedUser).Update("Name", "Jane Doe")
-
-	// Delete
-	db.Delete(&fetchedUser)
 }

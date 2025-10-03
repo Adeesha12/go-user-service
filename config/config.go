@@ -1,46 +1,68 @@
-// config.go
 package config
 
 import (
-	"log"
+	"go-user-service/utils/logger"
+
 	"os"
+	"path/filepath"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
 
-// var (
-// 	DBHost     string
-// 	DBPort     string
-// 	DBUser     string
-// 	DBPassword string
-// 	DBName     string
-// 	ServerPort string
-// )
-
-var (
-	DBHost     = "localhost"
-	DBPort     = "5432"
-	DBUser     = ""
-	DBPassword = ""
-	DBName     = ""
-)
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	DBHost = getEnv("DB_HOST", DBHost)
-	DBPort = getEnv("DB_PORT", DBPort)
-	DBUser = getEnv("DB_USER", DBUser)
-	DBPassword = getEnv("DB_PASSWORD", DBPassword)
-	DBName = getEnv("DB_NAME", DBName)
-
+type Config struct {
+	DBUser     string
+	DBPassword string
+	DBName     string
+	DBHost     string
+	DBPort     string
+	AppEnv     string
 }
 
-func getEnv(key string, defaultValue string) string {
-	if value, exits := os.LookupEnv(key); exits {
-		return value
+var (
+	cfg  *Config
+	once sync.Once
+)
+
+func LoadConfig() *Config {
+	once.Do(func() {
+
+		tryLoadEnv() // Load .env file only once
+
+		cfg = &Config{
+			DBUser:     os.Getenv("DB_USER"),
+			DBPassword: os.Getenv("DB_PASSWORD"),
+			DBName:     os.Getenv("DB_NAME"),
+			DBHost:     os.Getenv("DB_HOST"),
+			DBPort:     os.Getenv("DB_PORT"),
+			AppEnv:     os.Getenv("APP_ENV"), // dev, test, prod
+		}
+	})
+
+	return cfg
+}
+
+func tryLoadEnv() {
+	// Try current directory
+	if err := godotenv.Load(".env"); err == nil {
+		logger.Info.Println("🟢 .env loaded from current directory")
+		return
 	}
-	return defaultValue
+
+	// Try project root (one level up from tests)
+	if err := godotenv.Load("../.env"); err == nil {
+		logger.Info.Println("🟢 .env loaded from project root")
+		return
+	}
+
+	// Try two levels up (if running from subdirectories)
+	if err := godotenv.Load("../../.env"); err == nil {
+		logger.Info.Println("🟢 .env loaded from project root (two levels up)")
+		return
+	}
+
+	// Get absolute path
+	absPath, _ := filepath.Abs(".")
+	logger.Warn.Printf("🟡 Current working directory: %s", absPath)
+	logger.Error.Println("🔴  No .env file found, relying on system environment variables")
 }
